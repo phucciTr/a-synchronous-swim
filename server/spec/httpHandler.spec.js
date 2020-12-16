@@ -4,9 +4,14 @@ const path = require('path');
 const expect = require('chai').expect;
 const server = require('./mockServer');
 
+// Imports
 const httpHandler = require('../js/httpHandler');
+const keypressHandler = require('../js/keypressHandler');
+const http = require('http');
 
-
+// Declared Variables
+const port = 3000;
+const ip = '127.0.0.1';
 
 describe('server responses', () => {
 
@@ -23,6 +28,21 @@ describe('server responses', () => {
 
   it('should respond to a GET request for a swim command', (done) => {
     // write your test here
+    // import keypressHandler into this spec file.
+    let {req, res} = server.mock('../../client/js/swimTeam.js','GET', 'left');
+
+   //=> request swim command,from swimmTeam method, ( move. left, move.right) get by mock (  ,  )
+    //move.left == 'left'
+
+    httpHandler.router(req, res, ()  =>  {
+      expect(res._responseCode).to.equal(200);
+      expect(res._ended).to.equal(true);
+      // expect(SwimTeam.direction === 'left';
+
+      res._data = 'something';
+      console.log('res._data.toString() = ', res._data.toString());
+      // expect(res._data.toString()).to.be.expected;
+    });
     done();
   });
 
