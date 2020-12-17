@@ -28,21 +28,15 @@ describe('server responses', () => {
 
   it('should respond to a GET request for a swim command', (done) => {
     // write your test here
-    // import keypressHandler into this spec file.
-    let {req, res} = server.mock('../../client/js/swimTeam.js','GET', 'left');
 
-   //=> request swim command,from swimmTeam method, ( move. left, move.right) get by mock (  ,  )
-    //move.left == 'left'
+    let command = 'left';
+    let {req, res} = server.mock('/','GET', command);
+    httpHandler.router(req,res);
 
-    httpHandler.router(req, res, ()  =>  {
-      expect(res._responseCode).to.equal(200);
-      expect(res._ended).to.equal(true);
-      // expect(SwimTeam.direction === 'left';
+    expect(res._responseCode).to.equal(200);
+    expect(res._ended).to.equal(true);
+    expect(res._data.toString()).to.equal(command);
 
-      res._data = 'something';
-      console.log('res._data.toString() = ', res._data.toString());
-      // expect(res._data.toString()).to.be.expected;
-    });
     done();
   });
 
