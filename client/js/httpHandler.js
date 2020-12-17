@@ -5,6 +5,38 @@
   //
   // TODO: build the swim command fetcher here
   //
+  const fetchCommand = (command) => {
+    $.ajax({
+      type: 'GET',
+      data: command,
+      url: serverUrl,
+      success: () => {
+        SwimTeam.move(command);
+      }
+    });
+  };
+
+  // create the valid commands array
+  const directions = ['left', 'right', 'up','down'];
+
+   // create a function to generate random int
+  const getRandomInt = (min, max) => {
+    return Math.random() * (max - min) + min;
+  }
+
+  let swimSchedule;
+
+  const startSwim = () => {
+    let randomInt = Math.round(getRandomInt(0, directions.length - 1));
+    let randomMove = directions[randomInt];
+
+    fetchCommand(randomMove);
+    swimSchedule = setTimeout(startSwim, 1000);
+  }
+
+  // call swimmers to start swimming
+  startSwim();
+
 
   /////////////////////////////////////////////////////////////////////
   // The ajax file uplaoder is provided for your convenience!
@@ -17,7 +49,7 @@
     $.ajax({
       type: 'POST',
       data: formData,
-      url: 'FILL_ME_IN',
+      url: serverUrl,
       cache: false,
       contentType: false,
       processData: false,
