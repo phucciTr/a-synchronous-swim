@@ -4,7 +4,7 @@ const headers = require('./cors');
 const multipart = require('./multipartUtils');
 
 // Path for the background image ///////////////////////
-module.exports.backgroundImageFile = path.join('.', 'background.jpg');
+module.exports.backgroundImageFile = path.join('./', 'background.jpg');
 ////////////////////////////////////////////////////////
 
 let messageQueue = null;
@@ -21,9 +21,15 @@ module.exports.router = (req, res, next = ()=>{}) => {
 
   } else { console.log('swimmer moving ' + swimDirection[0]); }
 
+  let responseCode = 200;
+  if (!hasBackGround(this.backgroundImageFile)) { responseCode = 404; }
 
-  res.writeHead(200, headers);
+  res.writeHead(responseCode, headers);
   res.end(req._postData);
   next(); // invoke next() at the end of a request to help with testing!
 };
 
+
+let hasBackGround = (backGround) => {
+  return backGround.indexOf('missing.jpg') === -1;
+};
