@@ -51,5 +51,19 @@ let hasBackGround = (backGround) => {
 };
 
 let hasPostData = (req) => {
-  return req._postData && req.method === "POST";
+  return catchData(req) || req._postData && req.method === "POST";
+}
+
+function catchData(req){
+  let requestBody = [];
+
+  req.on('data', (chunk) => {
+    requestBody.push(chunk);
+    // console.log('requestBody = ', requestBody);
+    return true;
+
+  }).on('end', () => {
+    // requestBody = Buffer.concat(requestBody).toString();
+    // at this point, `requestBody` has the entire request requestBody stored in it as a string
+  });
 }
