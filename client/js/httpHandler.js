@@ -1,20 +1,22 @@
+const serverUrl = 'http://127.0.0.1:3000';
+
+//
+// TODO: build the swim command fetcher here
+//
+const fetchCommand = (command) => {
+  $.ajax({
+    type: 'GET',
+    data: command,
+    url: serverUrl,
+    success: () => {
+      SwimTeam.move(command);
+    }
+  });
+};
+
+
+
 (function() {
-
-  const serverUrl = 'http://127.0.0.1:3000';
-
-  //
-  // TODO: build the swim command fetcher here
-  //
-  const fetchCommand = (command) => {
-    $.ajax({
-      type: 'GET',
-      data: command,
-      url: serverUrl,
-      success: () => {
-        SwimTeam.move(command);
-      }
-    });
-  };
 
   // create the valid commands array
   const directions = ['left', 'right', 'up','down'];
