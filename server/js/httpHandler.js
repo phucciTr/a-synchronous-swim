@@ -3,6 +3,8 @@ const path = require('path');
 const headers = require('./cors');
 const multipart = require('./multipartUtils');
 
+const formidable = require('formidable');
+
 // Path for the background image ///////////////////////
 module.exports.backgroundImageFile = path.join('./', 'background.jpg');
 ////////////////////////////////////////////////////////
@@ -20,7 +22,12 @@ module.exports.router = (req, res, next = ()=>{}) => {
   responseCode = this.updateResponseCode(responseCode, req);
 
   res.writeHead(responseCode, headers);
-  res.end(req._postData);
+
+  if (hasNoMockData(req)) {
+    writeDataToRoot(req, res);
+
+  } else { res.end(req._postData); }
+
   next(); // invoke next() at the end of a request to help with testing!
 };
 
@@ -45,25 +52,45 @@ module.exports.updateResponseCode = (responseCode, req) => {
   return responseCode;
 };
 
+let writeDataToRoot = (req) => {
+  let form = new formidable.IncomingForm();
+
+  form.parse(req, (err, fields, files) => {
+
+      files.file.name = 'background.jpg';
+
+      let fileName = files.file.name;
+      let oldPath = files.file.path;
+      let newPath = './' + fileName;
+
+      createFile(oldPath, newPath);
+
+      res.write('Background Replaced!');
+      res.end();
+  });
+}
 
 let hasBackGround = (backGround) => {
   return backGround.indexOf('missing.jpg') === -1;
 };
 
 let hasPostData = (req) => {
-  return catchData(req) || req._postData && req.method === "POST";
+  return req.method === 'POST' && hasData(req) || req.method === "POST" && req._postData;
 }
 
-function catchData(req){
-  let requestBody = [];
+let hasNoMockData = (req) => {
+  return hasData(req) && req._postData !== undefined;
+}
 
+let hasData = (req) => {
   req.on('data', (chunk) => {
-    requestBody.push(chunk);
-    // console.log('requestBody = ', requestBody);
     return true;
-
-  }).on('end', () => {
-    // requestBody = Buffer.concat(requestBody).toString();
-    // at this point, `requestBody` has the entire request requestBody stored in it as a string
   });
 }
+
+let createFile = (oldPath, newPath) => {
+  fs.rename(oldPath, newPath, (err) => {
+    if (err) { throw err; }
+  });
+}
+

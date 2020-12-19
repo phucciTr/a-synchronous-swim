@@ -37,7 +37,7 @@ const fetchCommand = (command) => {
   }
 
   // call swimmers to start swimming
-  startSwim();
+  // startSwim();
 
 
   /////////////////////////////////////////////////////////////////////
