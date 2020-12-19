@@ -14,6 +14,18 @@ module.exports.initialize = (queue) => {
 
 module.exports.router = (req, res, next = ()=>{}) => {
 
+  logRequest(req);
+
+  let responseCode = 200;
+  responseCode = this.updateResponseCode(responseCode, req);
+
+  res.writeHead(responseCode, headers);
+  res.end(req._postData);
+  next(); // invoke next() at the end of a request to help with testing!
+};
+
+var logRequest = function (req) {
+
   let swimDirection = req.url.match(/(up|down|left|right)/);
 
   if (!swimDirection) {
@@ -21,15 +33,23 @@ module.exports.router = (req, res, next = ()=>{}) => {
 
   } else { console.log('swimmer moving ' + swimDirection[0]); }
 
-  let responseCode = 200;
-  if (!hasBackGround(this.backgroundImageFile)) { responseCode = 404; }
+};
 
-  res.writeHead(responseCode, headers);
-  res.end(req._postData);
-  next(); // invoke next() at the end of a request to help with testing!
+module.exports.updateResponseCode = (responseCode, req) => {
+
+  if (!hasBackGround(this.backgroundImageFile)) {
+    responseCode = 404;
+
+  } else if (hasPostData(req)) { responseCode = 201; }
+
+  return responseCode;
 };
 
 
 let hasBackGround = (backGround) => {
   return backGround.indexOf('missing.jpg') === -1;
 };
+
+let hasPostData = (req) => {
+  return req._postData && req.method === "POST";
+}
