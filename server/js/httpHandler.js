@@ -104,27 +104,30 @@ let handlePOST = (req, res, next) => {
   logRequest(req);
 
   if (req.url === '/background.jpg') {
-
     res.writeHead(201, headers);
     res.end();
     next();
 
-    let fileData = Buffer.alloc(0);
-
-    req.on('data', (chunk) => {
-      fileData = Buffer.concat([fileData, chunk]);
-    });
-
-    req.on('end', (chunk) => {
-      let file = multipart.getFile(fileData);
-
-      fs.writeFile(module.exports.backgroundImageFile, file.data, (err) => {
-        res.writeHead(err ? 400 : 201, headers);
-        res.end();
-        next();
-      });
-    });
+    collectThenRestoreData(req, res, next);
   }
+};
+
+let collectThenRestoreData = (req, res, next) => {
+  let fileData = Buffer.alloc(0);
+
+  req.on('data', (chunk) => {
+    fileData = Buffer.concat([fileData, chunk]);
+  });
+
+  req.on('end', (chunk) => {
+    let file = multipart.getFile(fileData);
+
+    fs.writeFile(module.exports.backgroundImageFile, file.data, (err) => {
+      res.writeHead(err ? 400 : 201, headers);
+      res.end();
+      next();
+    });
+  });
 };
 
 let hasBackGround = (backGround) => {
