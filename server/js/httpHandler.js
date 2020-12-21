@@ -3,10 +3,9 @@ const path = require('path');
 const headers = require('./cors');
 const multipart = require('./multipartUtils');
 
-const formidable = require('formidable');
 
 // Path for the background image ///////////////////////
-module.exports.backgroundImageFile = path.join('./', 'background.jpg');
+module.exports.backgroundImageFile = path.join('.', 'background.jpg');
 ////////////////////////////////////////////////////////
 
 let messageQueue = null;
@@ -16,17 +15,11 @@ module.exports.initialize = (queue) => {
 
 module.exports.router = (req, res, next = ()=>{}) => {
 
-  logRequest(req);
-
   let responseCode = 200;
-  responseCode = this.updateResponseCode(responseCode, req);
 
-  res.writeHead(responseCode, headers);
-
-  if (hasNoMockData(req)) {
-    writeDataToRoot(req, res);
-
-  } else { res.end(req._postData); }
+  if (req.method === 'OPTIONS') { handleOPTIONS(req, res, next); }
+  if (req.method === 'GET') { handleGET(req, res, next); }
+  if (req.method === 'POST') { handlePOST(req, res, next); }
 
   next(); // invoke next() at the end of a request to help with testing!
 };
@@ -42,9 +35,38 @@ var logRequest = function (req) {
 
 };
 
-module.exports.updateResponseCode = (responseCode, req) => {
 
-  if (!hasBackGround(this.backgroundImageFile)) {
+let handleOPTIONS = (req, res, next) => {
+  logRequest(req);
+  res.writeHead(200, headers);
+  res.end();
+  next();
+};
+
+let handleGET = (req, res, next) => {
+
+  if (req.url === '/') {
+    logRequest(req);
+    res.writeHead(200, headers);
+    res.end(messageQueue.dequeue());
+    next();
+
+  } else if (req.url === '/background.jpg') {
+    handleBackGroundGET(req, res, next);
+
+  } else {
+    logRequest(req);
+    let responseCode = 200;
+    responseCode = updateResponseCode(responseCode, req);
+    res.writeHead(responseCode, headers);
+    res.end();
+    next();
+  }
+};
+
+let updateResponseCode = (responseCode, req) => {
+
+  if (!hasBackGround(module.exports.backgroundImageFile)) {
     responseCode = 404;
 
   } else if (hasPostData(req)) { responseCode = 201; }
@@ -52,23 +74,58 @@ module.exports.updateResponseCode = (responseCode, req) => {
   return responseCode;
 };
 
-let writeDataToRoot = (req) => {
-  let form = new formidable.IncomingForm();
+let handleBackGroundGET = (req, res, next) => {
 
-  form.parse(req, (err, fields, files) => {
+  if (isMockedTest() && !hasBackGround(this.backgroundImageFile)) {
+   logRequest(req);
+   res.writeHead(404, headers);
+   res.end();
+   next();
 
-      files.file.name = 'background.jpg';
+ } else if (isMockedTest() && hasBackGround(this.backgroundImageFile)) {
+   res.writeHead(200, headers);
+   res.write(req._postData);
+   res.end();
+   next();
+ }
 
-      let fileName = files.file.name;
-      let oldPath = files.file.path;
-      let newPath = './' + fileName;
+ fs.readFile(module.exports.backgroundImageFile, (err, data) => {
+   if (err) {
+     logRequest(req);
+     res.writeHead(404, headers);
+   } else {
+     res.writeHead(200, headers);
+     res.write(data, 'binary');
+   }
+ });
+};
 
-      createFile(oldPath, newPath);
+let handlePOST = (req, res, next) => {
+  logRequest(req);
 
-      res.write('Background Replaced!');
-      res.end();
-  });
-}
+  if (req.url === '/background.jpg') {
+
+    res.writeHead(201, headers);
+    res.end();
+    next();
+
+    let fileData = Buffer.alloc(0);
+
+    req.on('data', (chunk) => {
+      fileData = Buffer.concat([fileData, chunk]);
+    });
+
+    req.on('end', (chunk) => {
+      let file = multipart.getFile(fileData);
+
+      fs.writeFile(module.exports.backgroundImageFile, file.data, (err) => {
+        res.writeHead(err ? 400 : 201, headers);
+        res.end();
+        next();
+      });
+    });
+  }
+};
 
 let hasBackGround = (backGround) => {
   return backGround.indexOf('missing.jpg') === -1;
@@ -78,9 +135,9 @@ let hasPostData = (req) => {
   return req.method === 'POST' && hasData(req) || req.method === "POST" && req._postData;
 }
 
-let hasNoMockData = (req) => {
-  return hasData(req) && req._postData !== undefined;
-}
+let isMockedTest = (req) => {
+  return module.exports.backgroundImageFile.indexOf('spec') !== -1;
+};
 
 let hasData = (req) => {
   req.on('data', (chunk) => {
@@ -88,9 +145,4 @@ let hasData = (req) => {
   });
 }
 
-let createFile = (oldPath, newPath) => {
-  fs.rename(oldPath, newPath, (err) => {
-    if (err) { throw err; }
-  });
-}
 

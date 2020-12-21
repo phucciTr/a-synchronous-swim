@@ -19,7 +19,7 @@ const fetchCommand = (command) => {
 (function() {
 
   // create the valid commands array
-  const directions = ['left', 'right', 'up','down'];
+  const directions = ['left', 'right', 'up', 'down'];
 
    // create a function to generate random int
   const getRandomInt = (min, max) => {
@@ -37,7 +37,7 @@ const fetchCommand = (command) => {
   }
 
   // call swimmers to start swimming
-  // startSwim();
+  startSwim();
 
 
   /////////////////////////////////////////////////////////////////////
@@ -51,7 +51,7 @@ const fetchCommand = (command) => {
     $.ajax({
       type: 'POST',
       data: formData,
-      url: serverUrl,
+      url: 'http://127.0.0.1:3000/background.jpg',
       cache: false,
       contentType: false,
       processData: false,
